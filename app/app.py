@@ -23,7 +23,8 @@ set_background("app/App.png")
 
 model_path = "models/emotion_distilbert"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
+model = AutoModelForSequenceClassification.from_pretrained(model_path, device_map=None)
+model.to("cpu")
 model.eval()
 
 emotion_labels = [
@@ -40,6 +41,8 @@ text = st.text_area("Saisis un texte ici :", "")
 if st.button("Prédire"):
     if text.strip():
         inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=128)
+        inputs = {key: val.to("cpu") for key, val in inputs.items()}
+
         with torch.no_grad():
             outputs = model(**inputs)
             logits = outputs.logits

@@ -2,10 +2,10 @@ import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch.nn.functional as F
 
-
 model_path = "models/emotion_distilbert"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
+model = AutoModelForSequenceClassification.from_pretrained(model_path, device_map=None)
+model.to("cpu")  
 
 text = "I just got promoted and I'm so happy!"
 
@@ -13,7 +13,8 @@ inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max
 
 with torch.no_grad():
     outputs = model(**inputs)
-    probs = torch.sigmoid(outputs.logits).squeeze().tolist()
+    logits = outputs.logits
+    probs = torch.sigmoid(logits).squeeze().cpu().numpy()
 
 emotion_labels = [
     'admiration', 'amusement', 'anger', 'annoyance', 'approval', 'caring',
